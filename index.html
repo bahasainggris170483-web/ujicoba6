@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Asesmen Bahasa Inggris - Unit 1 Bab 3</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --light: #ecf0f1; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 600px; }
+        .hidden { display: none; }
+        h2 { color: var(--primary); text-align: center; }
+        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { background: var(--secondary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #2980b9; }
+        .question-box { margin-bottom: 20px; padding: 15px; border-left: 5px solid var(--secondary); background: #f9f9f9; }
+        .options-label { display: block; padding: 10px; background: white; border: 1px solid #ddd; margin: 5px 0; border-radius: 5px; cursor: pointer; }
+        .options-label:hover { background: #eef2f7; }
+        .result-card { text-align: center; padding: 20px; border: 2px solid var(--success); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    <div id="login-page">
+        <h2>Selamat Datang di Portal Ujian</h2>
+        <p style="text-align:center">Pilih Peran Anda:</p>
+        <button onclick="showForm('student')">Masuk sebagai Siswa</button>
+        <button onclick="showForm('teacher')" style="background:#7f8c8d">Masuk sebagai Guru</button>
+    </div>
+
+    <div id="student-form" class="hidden">
+        <h3>Data Diri Siswa</h3>
+        <input type="text" id="student-name" placeholder="Nama Lengkap">
+        <input type="text" id="student-class" placeholder="Kelas (Contoh: 7A)">
+        <button onclick="startExam()">Mulai Ujian</button>
+        <button onclick="goBack()" style="background:none; color:grey;">Kembali</button>
+    </div>
+
+    <div id="teacher-form" class="hidden">
+        <h3>Akses Guru</h3>
+        <input type="password" id="teacher-code" placeholder="Masukkan Kode Akses">
+        <button onclick="checkTeacherCode()">Masuk Ke Panel</button>
+        <button onclick="goBack()" style="background:none; color:grey;">Kembali</button>
+    </div>
+
+    <div id="exam-page" class="hidden">
+        <div id="timer" style="text-align: right; color: red; font-weight: bold;">Waktu: <span id="time-left">10:00</span></div>
+        <h4 id="question-number">Pertanyaan 1</h4>
+        <div id="quiz-container"></div>
+        <button id="next-btn" onclick="nextQuestion()">Pertanyaan Selanjutnya</button>
+    </div>
+
+    <div id="result-page" class="hidden">
+        <div class="result-card">
+            <h2>Hasil Ujian</h2>
+            <p id="final-score" style="font-size: 2rem; font-weight: bold; color: var(--success);"></p>
+            <p id="student-info"></p>
+            <button onclick="location.reload()">Selesai & Keluar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "According to the text, Andre and Monita ... eat another bite because they are full.", a: "cannot", b: "can", c: "will", d: "do", correct: "a" },
+        { q: "The trash can is full. We ... put any more trash inside properly.", a: "can", b: "cannot", c: "will", d: "could", correct: "b" },
+        { q: "Monita says: 'We ... reduce the use of plastic from now on.'", a: "can", b: "must", c: "cannot", d: "will", correct: "b" },
+        { q: "To save water, Galang says we ... turn off the faucet while rubbing soap.", a: "can", b: "will", c: "must", d: "cannot", correct: "c" },
+        { q: "Next time, Andre and Monita ... bring their own containers.", a: "will", b: "can", c: "are", d: "did", correct: "a" }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let studentData = { name: "", class: "" };
+
+    function showForm(role) {
+        document.getElementById('login-page').classList.add('hidden');
+        if(role === 'student') document.getElementById('student-form').classList.remove('hidden');
+        else document.getElementById('teacher-form').classList.remove('hidden');
+    }
+
+    function goBack() {
+        document.getElementById('student-form').classList.add('hidden');
+        document.getElementById('teacher-form').classList.add('hidden');
+        document.getElementById('login-page').classList.remove('hidden');
+    }
+
+    function checkTeacherCode() {
+        const code = document.getElementById('teacher-code').value;
+        if(code === "FLO") alert("Selamat datang Guru! Fitur rekap nilai sedang dikembangkan.");
+        else alert("Kode akses salah!");
+    }
+
+    function startExam() {
+        studentData.name = document.getElementById('student-name').value;
+        studentData.class = document.getElementById('student-class').value;
+        if(!studentData.name || !studentData.class) return alert("Isi nama dan kelas!");
+        
+        document.getElementById('student-form').classList.add('hidden');
+        document.getElementById('exam-page').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const q = questions[currentQuestionIndex];
+        const container = document.getElementById('quiz-container');
+        document.getElementById('question-number').innerText = `Pertanyaan ${currentQuestionIndex + 1} dari ${questions.length}`;
+        container.innerHTML = `
+            <div class="question-box">${q.q}</div>
+            <label class="options-label"><input type="radio" name="answer" value="a"> A. ${q.a}</label>
+            <label class="options-label"><input type="radio" name="answer" value="b"> B. ${q.b}</label>
+            <label class="options-label"><input type="radio" name="answer" value="c"> C. ${q.c}</label>
+            <label class="options-label"><input type="radio" name="answer" value="d"> D. ${q.d}</label>
+        `;
+    }
+
+    function nextQuestion() {
+        const selected = document.querySelector('input[name="answer"]:checked');
+        if(!selected) return alert("Pilih jawaban dulu!");
+
+        if(selected.value === questions[currentQuestionIndex].correct) score += 20;
+
+        currentQuestionIndex++;
+        if(currentQuestionIndex < questions.length) loadQuestion();
+        else showResult();
+    }
+
+    function showResult() {
+        document.getElementById('exam-page').classList.add('hidden');
+        document.getElementById('result-page').classList.remove('hidden');
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('student-info').innerText = `Nama: ${studentData.name} | Kelas: ${studentData.class}`;
+    }
+</script>
+</body>
+</html>
